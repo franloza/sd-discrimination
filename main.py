@@ -7,12 +7,15 @@ SD_Discrimination : Framework for Subgroup Discovery and detecting discriminatio
 
 import sys, os, argparse, logging, pandas as pd
 from sd import sd
+from discrimination import discrimination
 
 def parse_args():
   parser = argparse.ArgumentParser()
   parser = argparse.ArgumentParser(description='SD_Discrimination : Framework for Subgroup Discovery and detecting discrimination in datasets.')
   parser.add_argument('dataset',  metavar='dataset.csv', help='Path to dataset in CSV format')
   parser.add_argument('-d', '--debug', action='store_true', help='Activate debug mode')
+  parser.add_argument('-sd', action='store_true', help='Run only Subgroup Discovery')
+  parser.add_argument('-dd', action='store_true', help='Run only Discrimination Detection')
   return parser.parse_args()
 
 def init_logging(log_file, debug=True):
@@ -39,8 +42,17 @@ def main():
   logging.debug('Debug mode activated')
   logging.info('Loading data from file')
   df = pd.read_csv (args.dataset,sep=';',header=0)
-  #Subgroup Discovery
-  sd(df)
+
+  if args.sd:
+    #Subgroup Discovery
+    sd(df)
+  elif args.dd:
+    #Discrimination Analysis
+    discrimination (df)
+  else:
+    sd(df)
+    discrimination (df)
+  
   sys.exit(0)
 
 if __name__ == '__main__':

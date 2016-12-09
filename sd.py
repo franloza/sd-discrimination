@@ -1,17 +1,36 @@
 """
 Module that includes all the functions for Subgroup Discovery (SD)
 """
+import logging
+import math
 from enum import Enum
-import logging, math
 
 def sd(dataset):
+    """
+    Main function for subgroup discovery. Configure the subgroup to evaluate it
+    """
+
+    ####################### CONFIGURE THIS ##############################
+
+    #Create subgroup
+    #You can include as many conditions as you want (2 conditions is OK for interpretability)
+    
+    #Example
+    #subgroup = dataset[(dataset['race'] == 'Latino/Hispanic American') & (dataset['age'] > 23)]
+
+    subgroup = dataset[(dataset['like'] >= 7.0)]
+
+    #####################################################################
+
+    logging.info("Subgroup discovery")
+
     #Define quality measures
     QualityMeasure = Enum('Quality Measure', 'WRA Specificity Sensitivity ChiSquare')
 
-    #Create subgroup
-    subgroup = dataset[(dataset['race'] == 'Latino/Hispanic American') &
-    (dataset['age'] > 23)]
-
+    lengthDataset = len(dataset)
+    logging.debug('Examples of the dataset {}'.format(lengthDataset))  
+    logging.debug('Examples of subgroup: {} ({:.2f}%)'.format(len(subgroup), len(subgroup)/lengthDataset))
+    
     evaluate(QualityMeasure.WRA,dataset,subgroup,'match')
     evaluate(QualityMeasure.Specificity,dataset,subgroup,'match')
     evaluate(QualityMeasure.Sensitivity,dataset,subgroup,'match')
@@ -36,7 +55,7 @@ def evaluate_wra (dataset,subgroup,targetColumn):
     
     #Calculate Weighed Relative Accuracy
     WRAcc = cf[0][0] - (cf[0][0] + cf[0][1]) * (cf[0][0] + cf[1][0])
-    logging.debug('WRAcc: {:4f}'.format(WRAcc))
+    logging.info('WRAcc: {:.6f}'.format(WRAcc))
     return WRAcc
 
 def evaluate_specificity (dataset,subgroup,targetColumn):
@@ -46,17 +65,17 @@ def evaluate_specificity (dataset,subgroup,targetColumn):
     
     #Calculate specificity
     specificity = 1 - (cf[1][0] / (cf[1][0] + cf[1][1]))
-    logging.debug('Specificity: {:4f}'.format(specificity))
+    logging.info('Specificity: {:.6f}'.format(specificity))
     return specificity
 
 def evaluate_sensitivity (dataset,subgroup,targetColumn):
-    """Returns the Sensitivity of a subgroup.""" 
+    """Returns the Sensitivity of a subgroup."""
     #Get confusion matrix
     cf = confusion_matrix(dataset,subgroup,targetColumn)
     
     #Calculate sensitivity
     sensitivity = cf[0][0] / (cf[0][0] + cf [0][1])
-    logging.debug('Sensitivity: {:4f}'.format(sensitivity))
+    logging.info('Sensitivity: {:.6f}'.format(sensitivity))
     return sensitivity
 
 def evaluate_chi_square (dataset,subgroup,targetColumn):
@@ -68,9 +87,17 @@ def evaluate_chi_square (dataset,subgroup,targetColumn):
 
     #Calculate chi square
     chi_square = (P + N) * (correlation (cf) ** 2)
-    logging.debug('Chi Square: {:4f}'.format(chi_square))
+    logging.info('Chi Square: {:.6f}'.format(chi_square))
     return chi_square
-    
+
+def correlation (cf):
+    """Returns the correlation metric given a confusion matrix."""
+    p = cf[0][0]
+    n = cf[0][1]
+    P = p + cf[0][1]
+    N = n + cf[1][1]
+    return (p*N - P*n) / math.sqrt(P*N*(p+n)*(P-p+N-n))
+
 def confusion_matrix (dataset,subgroup,targetColumn):
     """Returns the confusion matrix of a dataset with a subgroup.""" 
     total_rows = len(dataset)
@@ -86,14 +113,3 @@ def confusion_matrix (dataset,subgroup,targetColumn):
     
     return [[subgroup_pos_target_rate,complement_pos_target_rate],
             [subgroup_neg_target_rate,complement_neg_target_rate]]
-
-def correlation (cf):
-    """Returns the correlation metric given a confusion matrix."""
-    p = cf[0][0]
-    n = cf[0][1]
-    P = p + cf[0][1]
-    N = n + cf[1][1]
-    return (p*N - P*n) / math.sqrt(P*N*(p+n)*(P-p+N-n))
-    
-
-
