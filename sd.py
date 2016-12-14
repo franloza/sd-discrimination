@@ -113,3 +113,58 @@ def confusion_matrix (dataset,subgroup,targetColumn):
     
     return [[subgroup_pos_target_rate,complement_pos_target_rate],
             [subgroup_neg_target_rate,complement_neg_target_rate]]
+
+
+def sd_beamSearch(dataset):
+    target = 'match'
+    width = 10
+    depth = 3
+    bins = 3
+    subgroups = [(set(), dataset, 0)]
+    descriptors = []
+
+    for column in dataset.columns:
+        if (dataset[column].dtype == "float64" or dataset[column].dtype == "int64"):
+            descriptors.append((column, getDescriptorsEW(dataset, column, bins)))
+    #logging.debug(descriptors)
+    for level in range(depth):
+        logging.debug("level " + str(level))
+        newsubgroups = []
+        for subgroup in subgroups:
+            print(subgroup[0])
+            for descriptor in descriptors:
+                if not ((descriptor[0] == target) or (descriptor[0] in subgroup[0])):
+                    columns = subgroup[0] | set([descriptor[0]])
+                    for subbin in descriptor[1]:
+                        bin = subgroup[1][subbin]
+                        val = evaluate_wra(dataset, bin, target)
+                        newsubgroup = (columns, bin, val)
+                        newsubgroups.append(newsubgroup)
+        subgroups = []
+        newsubgroups.sort(reverse=True,key=lambda x: x[2])
+        seen = set()
+        for sg in newsubgroups:
+            if (str(sg[0]) not in seen):
+                subgroups.append(sg)
+                seen.add(str(sorted(sg[0])))
+        print(len(newsubgroups))
+        subgroups = subgroups[:width]
+        for sg in subgroups:
+            print(sg[0], sg[2])
+
+
+
+
+def getDescriptorsEW (dataset, column, bins):
+    width = (max(dataset[column]) - min(dataset[column]))/bins
+    logging.debug("column=" + str(column) + ", width=" + str(width))
+    descriptors = []
+    start = min(dataset[column]) - 1
+    for x in range(bins):
+        end = min(dataset[column]) + (x+1 * width)
+        bin = (dataset[column] > start) & (dataset[column] <= end)
+        #print(start, end)
+        #print(bin.value_counts())
+        descriptors.append(bin)
+        start = end
+    return descriptors
