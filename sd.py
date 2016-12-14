@@ -113,3 +113,68 @@ def confusion_matrix (dataset,subgroup,targetColumn):
     
     return [[subgroup_pos_target_rate,complement_pos_target_rate],
             [subgroup_neg_target_rate,complement_neg_target_rate]]
+
+
+def sd_beamSearch(dataset):
+    target = 'match'
+    width = 10
+    depth = 3
+    bins = 4
+    excluded_columns = ["decision", "decision_o", target]
+
+
+    subgroups = [(set(), dataset, 0, set())]
+    descriptors = []
+    columns = set(dataset.columns) - set(excluded_columns)
+
+    for column in columns:
+        if (dataset[column].dtype == "float64" or dataset[column].dtype == "int64"):
+            descriptors.append((column, getDescriptorsEW(dataset, column, bins)))
+    #logging.debug(descriptors)
+    for level in range(depth):
+        logging.debug("level " + str(level))
+        newsubgroups = []
+        for subgroup in subgroups:
+            print(subgroup[0])
+            for descriptor in descriptors:
+                if not (descriptor[0] in subgroup[0]):
+                    columns = subgroup[0] | set([descriptor[0]])
+                    for subbin in descriptor[1]:
+                        bin = subgroup[1][subbin[0]]
+                        val = evaluate_wra(dataset, bin, target)
+                        binname = subgroup[3] | set([subbin[1]])
+                        newsubgroup = (columns, bin, val, binname)
+                        newsubgroups.append(newsubgroup)
+        subgroups = []
+        newsubgroups.sort(reverse=True,key=lambda x: x[2])
+        seen = set()
+        for sg in newsubgroups:
+            if (str(sorted(sg[3])) not in seen):
+                subgroups.append(sg)
+                seen.add(str(sorted(sg[3])))
+        subgroups = subgroups[:width]
+        for sg in subgroups:
+            print(sg[3], sg[2])
+
+
+
+
+def getDescriptorsEW (dataset, column, bins):
+    width = (max(dataset[column]) - min(dataset[column]))/bins
+    logging.debug("column=" + str(column) + ", width=" + str(width))
+    descriptors = []
+    start = min(dataset[column]) - 1
+    for x in range(bins):
+        end = min(dataset[column]) + ((x+1) * width)
+        bin = (dataset[column] > start) & (dataset[column] <= end)
+        if x == 0:
+            binname = column + " < " + str(end)
+        elif x == bins - 1:
+            binname = column + " >= " + str(start)
+        else:
+            binname = str(start) + " > " + column + " >= " + str(end)
+        #print(start, end)
+        #print(bin.value_counts())
+        descriptors.append((bin, binname))
+        start = end
+    return descriptors

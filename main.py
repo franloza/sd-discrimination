@@ -6,7 +6,7 @@ SD_Discrimination : Framework for Subgroup Discovery and detecting discriminatio
 """
 
 import sys, os, argparse, logging, pandas as pd
-from sd import sd
+from sd import sd, sd_beamSearch
 from discrimination import discrimination
 
 def parse_args():
@@ -17,7 +17,7 @@ def parse_args():
   parser.add_argument('-sd', action='store_true', help='Run only Subgroup Discovery')
   parser.add_argument('-dd', action='store_true', help='Run only Direct Discrimination Detection')
   parser.add_argument('-id', action='store_true', help='Run only Indirect Discrimination Detection')
-
+  parser.add_argument('-bs', action='store_true', help='Run only BeamSearch Subgroup Discovery')
   return parser.parse_args()
 
 def init_logging(log_file, debug=True):
@@ -51,6 +51,8 @@ def main():
   elif args.dd:
     #Discrimination Analysis
     discrimination (df)
+  elif args.bs:
+    sd_beamSearch(df)
   else:
     sd(df)
     discrimination (df,args.id)
