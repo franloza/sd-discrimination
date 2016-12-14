@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.5
 # coding: utf-8
 
 """
@@ -15,7 +15,9 @@ def parse_args():
   parser.add_argument('dataset',  metavar='dataset.csv', help='Path to dataset in CSV format')
   parser.add_argument('-d', '--debug', action='store_true', help='Activate debug mode')
   parser.add_argument('-sd', action='store_true', help='Run only Subgroup Discovery')
-  parser.add_argument('-dd', action='store_true', help='Run only Discrimination Detection')
+  parser.add_argument('-dd', action='store_true', help='Run only Direct Discrimination Detection')
+  parser.add_argument('-id', action='store_true', help='Run only Indirect Discrimination Detection')
+
   return parser.parse_args()
 
 def init_logging(log_file, debug=True):
@@ -51,7 +53,7 @@ def main():
     discrimination (df)
   else:
     sd(df)
-    discrimination (df)
+    discrimination (df,args.id)
   
   sys.exit(0)
 

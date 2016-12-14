@@ -18,7 +18,7 @@ def sd(dataset):
     #Example
     #subgroup = dataset[(dataset['race'] == 'Latino/Hispanic American') & (dataset['age'] > 23)]
 
-    subgroup = dataset[(dataset['like'] >= 7.0)]
+    subgroup = dataset[(dataset['attractive_o'] >= 5) & (dataset['like'] >= 6) & (dataset['funny_o'] >= 6) & (dataset['guess_prob_liked'] >= 4)]
 
     #####################################################################
 
@@ -30,7 +30,7 @@ def sd(dataset):
     lengthDataset = len(dataset)
     logging.debug('Examples of the dataset {}'.format(lengthDataset))  
     logging.debug('Examples of subgroup: {} ({:.2f}%)'.format(len(subgroup), len(subgroup)/lengthDataset))
-    
+
     evaluate(QualityMeasure.WRA,dataset,subgroup,'match')
     evaluate(QualityMeasure.Specificity,dataset,subgroup,'match')
     evaluate(QualityMeasure.Sensitivity,dataset,subgroup,'match')
@@ -49,20 +49,20 @@ def evaluate(QualityMeasure,dataset,subgroup,targetColumn):
 
 
 def evaluate_wra (dataset,subgroup,targetColumn):
-    """Returns the Weighted Relative Accuracy of a subgroup."""   
+    """Returns the Weighted Relative Accuracy of a subgroup."""
     #Get confusion matrix
     cf = confusion_matrix(dataset,subgroup,targetColumn)
-    
+
     #Calculate Weighed Relative Accuracy
     WRAcc = cf[0][0] - (cf[0][0] + cf[0][1]) * (cf[0][0] + cf[1][0])
     logging.info('WRAcc: {:.6f}'.format(WRAcc))
     return WRAcc
 
 def evaluate_specificity (dataset,subgroup,targetColumn):
-    """Returns the Specificity of a subgroup."""    
+    """Returns the Specificity of a subgroup."""
     #Get confusion matrix
     cf = confusion_matrix(dataset,subgroup,targetColumn)
-    
+
     #Calculate specificity
     specificity = 1 - (cf[1][0] / (cf[1][0] + cf[1][1]))
     logging.info('Specificity: {:.6f}'.format(specificity))
