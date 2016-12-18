@@ -100,6 +100,7 @@ def emm_beamSearch(dataset):
     width = 10
     depth = 2 #3
     bins = 4
+    categorical_bins = 10
     excluded_columns = [target1,target2]
 
 
@@ -110,6 +111,15 @@ def emm_beamSearch(dataset):
     for column in columns:
         if (dataset[column].dtype == "float64" or dataset[column].dtype == "int64"):
             descriptors.append((column, getDescriptorsEW(dataset, column, bins)))
+        else:
+            catbins = []
+            dataset[column] = dataset[column].astype('category')
+            categories = dataset[column].value_counts().head(categorical_bins)
+            for (cat, occurence) in categories.iteritems():
+                bin = (dataset[column] == cat)
+                binname = column + " = \"" + cat + "\""
+                catbins.append((bin, binname))
+            descriptors.append((column, catbins))
     #logging.debug(descriptors)
     for level in range(depth):
         logging.debug("level " + str(level))
@@ -152,7 +162,7 @@ def getDescriptorsEW (dataset, column, bins):
         elif x == bins - 1:
             binname = column + " >= " + str(start)
         else:
-            binname = str(start) + " > " + column + " >= " + str(end)
+            binname = str(start) + " < " + column + " <= " + str(end)
         #print(start, end)
         #print(bin.value_counts())
         descriptors.append((bin, binname))
