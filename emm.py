@@ -3,6 +3,7 @@ Module that includes all the functions for Exceptional Model Mining(EMM)
 """
 import logging
 import math
+from numpy import sign
 from enum import Enum
 from sklearn.metrics import matthews_corrcoef
 
@@ -20,7 +21,7 @@ def emm(dataset):
     ####################### CONFIGURE THIS ##############################
 
     #Define subgroup
-    subgroup = dataset[(dataset['browser_colordepth'] < 24.0)]
+    subgroup = dataset[(dataset['os_timezone'] == "Europe/Berlin") & (dataset['browser_viewdepth'] <= 929.0) & (dataset['browser_viewdepth'] > 464.5)]
 
     #Define target 1
     target1 = 'revenue'
@@ -70,9 +71,6 @@ def evaluate_scd (ModelClass,dataset,subgroup,target1,target2):
     n = len(subgroup)
     nComp = len(complement)
 
-
-    
-
     if (n < 4 or nComp < 4):
         SCD = 0
     else:
@@ -91,6 +89,8 @@ def phi_coefficient (subgroup,target1,target2):
 
 def fisher_trans (r):
      """Returns Fisher z transformation."""
+     #Smooth correlation
+     r = r - sign(r) * 0.0001
      return (1/2) * math.log((1 + r) / (1 - r))
 
 #TODO: Adapt the beam search to EMM
