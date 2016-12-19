@@ -21,7 +21,8 @@ def emm(dataset):
     ####################### CONFIGURE THIS ##############################
 
     #Define subgroup
-    subgroup = dataset[(dataset['os_timezone'] == "Europe/Berlin") & (dataset['browser_viewdepth'] <= 929.0) & (dataset['browser_viewdepth'] > 464.5)]
+    #subgroup = dataset[(dataset['dvce_type'] == 'Tablet')]
+    subgroup = dataset[(dataset['os_timezone'].str.contains("Asia") & (dataset['os_name'].str.contains("iPhone")))]
 
     #Define target 1
     target1 = 'revenue'
@@ -35,7 +36,7 @@ def emm(dataset):
 
     lengthDataset = len(dataset)
     logging.debug('Examples of the dataset {}'.format(lengthDataset))  
-    logging.debug('Examples of subgroup: {} ({:.2f}%)'.format(len(subgroup), len(subgroup)/lengthDataset))
+    logging.debug('Examples of subgroup: {} ({:.2f}%)'.format(len(subgroup), (len(subgroup)/lengthDataset) * 100))
     correlationTargets = phi_coefficient (dataset,target1,target2)
     logging.debug('Correlation of the two targets: {:.2f}'.format(correlationTargets))
    
@@ -93,12 +94,11 @@ def fisher_trans (r):
      r = r - sign(r) * 0.0001
      return (1/2) * math.log((1 + r) / (1 - r))
 
-#TODO: Adapt the beam search to EMM
 def emm_beamSearch(dataset):
     target1 = 'revenue'
     target2 = 'new_buttons'
-    width = 10
-    depth = 2 #3
+    width = 15
+    depth = 4
     bins = 4
     categorical_bins = 10
     excluded_columns = [target1,target2]
